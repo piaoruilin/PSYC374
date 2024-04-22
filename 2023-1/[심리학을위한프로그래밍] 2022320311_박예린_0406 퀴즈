@@ -1,0 +1,15 @@
+import pandas as pd
+
+df = pd.read_csv(r'organisation.csv')
+
+new_df = df[(df['Country'] == 'Germany') & (df['Number of employees'] < 5000)]
+
+new_columns = []
+for column in new_df.columns:
+    if column == "Country":
+        new_columns.append(column)
+    if column == "Number of employees":
+        new_columns.append(column)
+
+final_df = new_df[new_columns]
+final_df.to_csv('UNDER_5000.csv', index=False)
