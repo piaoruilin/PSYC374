@@ -1,20 +1,32 @@
 import pandas as pd
-import os
+import os #interacting with file system
 ls = os.listdir()
 df = pd.DataFrame()
+
+#concatenate Excel files into df
 for f in ls:
     if f.endswith(".xlsx"):
         tmp = pd.read_excel(f)
         df = pd.concat([df, tmp])
+
+#calculate value counts
 a = tmp["Target"].value_counts() # 대부분의 단어는 Cond당 1회 총 2회 제시, 소수의 단어만 1회 또는 4회 제시
+
+#clean data
 df = df[df["exp_resp.corr"].isna() == False]
+
+#calculate mean response time and accuracy
 #-실습1: 전체 아이템 평균
 #Cond를 넣은 이유, R에서만 등장하는 단어가 존재
 f2 = df[df["exp_resp.corr"] == 1]
 f2 = f2.groupby(["Target", "Cond"]).agg({"exp_resp.rt":"mean", "exp_resp.corr":lambda x: x.sum()/116}).reset_index()
+
+#adjust accuracy calculation for specific words in condition
 for word in ["circle", "voice"]:
     f2.loc[(f2["Target"] == word) & (f2["Cond"] == "F"), "exp_resp.corr"] /= 2
     f2.loc[(f2["Target"] == word) & (f2["Cond"] == "R"), "exp_resp.corr"] /= 2
+
+#prepare individual participant data
 # f2.to_excel("F2 아이템 별 평균.xlsx")
 #-실습1.1: 전체 아이템의 각 참가자별 기록
 ls = os.listdir()
@@ -28,6 +40,8 @@ for f in ls:
             f2_indv["Target"] = tmp["Target"] + "+" + tmp["Cond"]
         else:
             f2_indv[f.split(".xlsx")[0]] = tmp["exp_resp.rt"]
+
+#prepare individual participant accuracy data
 # f2_indv.to_excel("F2 피험자별 RT.xlsx", index = False)
 f2_indv_1 = pd.DataFrame()
 for f in ls:
@@ -41,13 +55,15 @@ for f in ls:
             f2_indv_1[f.split(".xlsx")[0]] = tmp["exp_resp.corr"]
 # f2_indv_1.to_excel("F2 피험자별 ACC.xlsx")
 
-
+#SDT: signal detection theory calculations
 #-실습2
 df = df[df["exp_resp.keys"].isna() == False]
 df.loc[(df["Cond"] == "F") & (df["exp_resp.corr"] ==1), "SDT"] = "CR"
 df.loc[(df["Cond"] == "R") & (df["exp_resp.corr"] ==1), "SDT"] = "CORR"
 df.loc[(df["Cond"] == "F") & (df["exp_resp.corr"] ==0), "SDT"] = "F_Alarm"
 df.loc[(df["Cond"] == "R") & (df["exp_resp.corr"] ==0), "SDT"] = "Miss"
+
+#calculate SDT metrics
 #F = 136, R = 142 total = 278
 lenf = len(df[df["Cond"] == "F"])
 lenr = len(df[df["Cond"] == "R"])
@@ -61,7 +77,7 @@ SDT_total["일치 조건"] = ["Hit: "+str(CORR), "MISS: "+str(Miss)]
 SDT_total["불일치 조건"] = ["False Alarm: "+str(F_Alarm), "Correct Reject: "+str(CR)]
 #SDT_total.to_excel("SDT 전체.xlsx", index = False)
 
-
+#individual participant SDT metrics
 id_list = []
 cr_l = []
 cor_l =[]
@@ -85,6 +101,7 @@ for id in ids:
     else:
         print(id)
 
+#create individual SDT data frame
 SDT_indv= pd.DataFrame()
 SDT_indv["ID"] = id_list
 SDT_indv["CORRECT"] = cor_l
