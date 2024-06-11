@@ -3,14 +3,14 @@ import os
 import numpy as np
 
 # Function to read and display an Excel file using pandas
-def read_excel_file(phoneme_grapheme):
+def read_excel_file(file_path):
     try:
-        df = pd.read_excel(phoneme_grapheme)
-        print(f"Data from {phoneme_grapheme}:")
+        df = pd.read_excel(file_path)
+        print(f"Data from {file_path}:")
         print(df.head())
         return df
     except Exception as e:
-        print(f"Error reading {phoneme_grapheme}: {e}")
+        print(f"Error reading {file_path}: {e}")
         return None
 
 # Function to handle outliers based on standard deviation
@@ -83,10 +83,12 @@ def analyze_sdt(df):
 # Main function to run the script
 def main():
     # File selection
-    file_path = input("Enter the path of the directory containing the Excel files: ")
-    if not os.path.exists(file_path):
-        print("The specified directory does not exist. Please check the path and try again.")
-        return
+    while True:
+        file_path = input("Enter the path of the directory containing the Excel files: ")
+        if os.path.exists(file_path) and os.path.isdir(file_path):
+            break
+        else:
+            print("The specified directory does not exist. Please check the path and try again.")
 
     # List all Excel files in the directory
     file_list = [f for f in os.listdir(file_path) if f.endswith(('.xlsx', '.xls'))]
@@ -109,7 +111,13 @@ def main():
     print(combined_df.head())
 
     # Analysis type selection
-    analysis_type = input("Select analysis type (A, B, C, D, E): ").strip().upper()
+    while True:
+        analysis_type = input("Select analysis type (A, B, C, D, E): ").strip().upper()
+        if analysis_type in ['A', 'B', 'C', 'D', 'E']:
+            break
+        else:
+            print("Invalid analysis type selected. Please choose from A, B, C, D, E.")
+
     column_to_check = 'exp_resp.rt'  # Example column, change as needed
 
     if analysis_type == 'A':
@@ -120,7 +128,12 @@ def main():
 
     elif analysis_type == 'B':
         num_sd = float(input("Enter the number of standard deviations to use for outlier handling: "))
-        method = input("Enter method to handle outliers (missing, mean, median): ").strip().lower()
+        while True:
+            method = input("Enter method to handle outliers (missing, mean, median): ").strip().lower()
+            if method in ['missing', 'mean', 'median']:
+                break
+            else:
+                print("Invalid method. Please choose from missing, mean, median.")
         combined_df = handle_outliers(combined_df, column_to_check, num_sd, method)
         print("DataFrame after handling outliers:")
         print(combined_df.head())
@@ -136,15 +149,13 @@ def main():
     elif analysis_type == 'E':
         analyze_sdt(combined_df)
 
-    else:
-        print("Invalid analysis type selected.")
-        return
-
     # Save the results
-    output_path = input("Enter the path to save the results: ")
-    if not os.path.isdir(os.path.dirname(output_path)):
-        print("The specified path to save the results does not exist. Please check the path and try again.")
-        return
+    while True:
+        output_path = input("Enter the path to save the results (including filename, e.g., results.xlsx): ")
+        if os.path.isdir(os.path.dirname(output_path)):
+            break
+        else:
+            print("The specified path to save the results does not exist. Please check the path and try again.")
 
     combined_df.to_excel(output_path, index=False)
     print(f"Results saved to {output_path}")
